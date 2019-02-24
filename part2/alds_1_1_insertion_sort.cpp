@@ -1,6 +1,5 @@
 #include<iostream>
 #include<stdio.h>
-#include<algorithm>
 using namespace std;
 static const int MAX = 100;
 
@@ -37,6 +36,7 @@ int main() {
         scanf("%d", &A[i]);
     }
     
+    trace(A, N);
     insertionSort(A, N);
 
     return 0;
