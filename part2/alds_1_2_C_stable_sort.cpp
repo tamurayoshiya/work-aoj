@@ -63,16 +63,32 @@ void selectionSort(Card C[], int N, int step) {
     selectionSort(C, N, step);
 }
 
+bool isStable(Card C[], int N, Card left, Card right) {
+    Card P[N];
+    int cnt = 0;
+    for (int i = 0; i < N; i++) {
+        if (C[i].value == left.value) {
+            P[cnt] = C[i];
+            cnt++;
+        }
+    }
+    for (int i = 0; i < cnt; i++) {
+        if (P[i].value == left.value && P[i].suit == left.suit) {
+            return P[i+1].value == right.value && P[i+1].suit == right.suit;
+        }
+    }
+    return false;
+}
+
 // 同じ数字を持つカードが複数ある場合、それらが入力に
 // 出現する順序で出力されることを「安定な出力」と評価
 void checkStable(Card Original[], Card Sorted[], int N) {
-    bool stable;
+    bool stable = true;
     for (int i = 1; i < N; i++) {
-        int left = Sorted[i-1].value;
-        int right = Sorted[i].value;
-        if (left == right) {
-            for (int j = i; j < N; j++) {
-            }
+        Card left = Sorted[i-1];
+        Card right = Sorted[i];
+        if (left.value == right.value) {
+            stable = isStable(Original, N, left, right) && stable;
         }
     }
     if (stable) {
