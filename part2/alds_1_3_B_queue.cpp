@@ -1,56 +1,88 @@
+#include <cstdlib>
 #include<iostream>
 #include<stdio.h>
 using namespace std;
 static const int N_MAX = 1000000;
+static const int LEN_P_NAME = 10;
 
 struct Node {
-    char name[10];
+    char name[LEN_P_NAME];
     int time; 
+    bool active;
     Node *left;
     Node *right;
 };
 
-struct Node QUEUE;
+struct Node *nil = (Node *)malloc(sizeof(Node));
+struct Node *QUEUE;
+struct Node *LAST_NODE;
+int QUEUE_LEN = 0;
 
 int len(Node *queue) {
-    if (!queue->right) {
+    if (queue == nil || !queue->active) {
         return 0;
     }
-    return 1 + len(queue->right);
-}
-
-Node* walk(Node *queue) {
-    if (queue->right) {
-        return walk(queue->right);
-    }
-    return queue;
+    return QUEUE_LEN;
 }
 
 Node* last(Node *queue) {
-    if (!queue->right) {
-        return queue;
-    }
-    return walk(queue);
+    return LAST_NODE;
 }
 
 Node* head() {
-    return &QUEUE;
+    return QUEUE;
 }
 
 Node* tail() {
-    return last(&QUEUE);
+    return last(QUEUE);
 }
 
-void enqueue(char name[10], int time) {
+Node* create() {
     struct Node *q = (Node *)malloc(sizeof(Node));
-    for (int i = 0; i < 10; i++) {
+    q->left = nil;
+    q->right = nil;
+    return q;
+}
+
+void enqueue(char name[LEN_P_NAME], int time)
+{
+    Node *q = create();
+    
+    int l = len(QUEUE);
+    QUEUE_LEN++;
+    if (l == 0) {
+        q = QUEUE;
+    }
+    
+    for (int i = 0; i < LEN_P_NAME; i++) {
         q->name[i] = name[i];
     }
     q->time = time;
+    q->active = true;
     
-    Node *last = tail();
-    last->right = q;
-    q->left = last;
+    if (l > 0) {
+        Node *last = tail();
+        last->right = q;
+        q->left = last;
+        LAST_NODE = q;
+    }
+}
+
+void dequeue()
+{
+    if (len(QUEUE) == 0) {
+        return;
+    }
+    QUEUE_LEN--;
+    Node *h = head();
+    QUEUE = h->right;
+}
+
+void initQueue()
+{
+    Node *q = create();
+    QUEUE = q;
+    LAST_NODE = q;
 }
 
 int main()
@@ -62,30 +94,38 @@ int main()
     int quantum;
     scanf("%d", &quantum);
     
+    // Init queue
+    initQueue();
+    
     // Scan rows and build queue
     for (int i = 0; i < n; i++) {
         char name[10];
         int time;
         scanf("%s %d", name, &time);
-        if (i == 0) {
-            for (int j = 0; j < 10; j++) {
-                QUEUE.name[j] = name[j];
-            }
-            QUEUE.time = time;
-            continue;
-        }
         enqueue(name, time);
     }
     
     // Start Round-Robin
-    int cnt = len(&QUEUE);
-    printf("%d\n", cnt);
-    
-    Node *first = head();
-    printf("%s %d\n", first->name, first->time);
-    
-    Node *last = tail();
-    printf("%s %d\n", last->name, last->time);
+    int l = len(QUEUE);
+    int rest = 0;
+    int time = 0;
+    while(l > 0) {
+        Node *h = head();
+        rest = h->time - quantum;
+        if (rest > 0) {
+            // Reschedule
+            dequeue();
+            enqueue(h->name, rest);
+            time += quantum;
+            continue;
+        }
+        
+        time += h->time;
+        printf("%s %d\n", h->name, time);
+        dequeue();
+
+        l = len(QUEUE);
+    }
   
     return 0;
 }
